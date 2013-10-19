@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link type="text/css" rel="stylesheet" href="stylesheet.css"/>
+    <script src="http://chatbuilder.hackreactor.com/ChatBuilder.js"></script>
+  </head>
+  <body>
+    <script>
+	Chat.guide.start();
+delete Chat.display;
+delete Chat.fetch;
+delete Chat.send;
+var ajaxURL = "https://api.parse.com/1/classes/chats";
+var userName = location.search.slice(12, location.search.length);
+function chatSend(putText) {
+	$.ajax({
+		url: ajaxURL,
+		type: "POST",
+		data: JSON.stringify({
+			text: userName + ": " + putText					 
+		})
+		   
+	});
+}
+
+function chatDisplay(displayText) {
+	$(document).ready(function() {
+		$("ul").append("<li><div class = 'border'>"+displayText+"</div></li>");						   
+	});	
+}
+
+function chatFetch(callback) {
+	$.ajax({
+		url: ajaxURL, 
+		type: "GET",
+		data: "order=-createdAt",
+		success: function(grabbedData) {
+			var resultMessages = [];
+			var resultData = grabbedData.results;
+			for (var i = 0; i < 10; i++) {
+				resultMessages.unshift(resultData[i].text);
+			}	
+			callback(resultMessages);
+		}
+
+	});
+}
+chatFetch(function(a) {
+	var myArray = [];
+	for (var i = 0; i < 10; i++) {
+		chatDisplay(a[i]);
+	}
+
+});
+
+setInterval(function() {
+	
+	chatFetch(function(a) {
+		for (var i = 0; i < 10; i++) {
+			$(document).ready(function() {
+				$("ul li:first-child").remove();
+				$("ul").append("<li><div class = 'border'>"+a[i]+"</div></li>");
+			});
+		}
+	});
+
+}, 3000);
+
+$(document).ready(function() {
+	$("button").click(function() {
+		chatSend($(".draft").val());
+		$(".draft").val("");
+	});						   						
+});
+    </script>
+
+
+    <h2>Borken Chat</h2>
+
+    <ul class="messages">
+    </ul>
+	<input class="draft" type="text">
+    <button class="send">send</button>
+  </body>
+</html>
